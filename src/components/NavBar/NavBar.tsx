@@ -38,7 +38,7 @@ const NavBar = ({ sideBar, setSideBar }: SideBarProps): JSX.Element => {
         return () => (window.onscroll = null)
     }
     return (
-        <AppBar position="sticky" elevation={0} className={isScrolled && classes.scrolledNavbar}>
+        <AppBar position="sticky" elevation={0} className={isScrolled ? classes.scrolledNavbar: ''}>
             <Toolbar className={classes.toolBar}>
                 <Box>
                 {medium && (

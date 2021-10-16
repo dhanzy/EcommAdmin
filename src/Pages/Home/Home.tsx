@@ -1,17 +1,76 @@
+import React from 'react';
 import { Box, Grid, Paper, Typography } from '@material-ui/core';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 import { BarChartOutlined, CreditCardOutlined, MoneyOutlined, ReceiptOutlined, ShoppingBasketOutlined, LocalShippingOutlined, AddLocationOutlined } from '@material-ui/icons';
-import { DataGrid } from '@material-ui/data-grid';
+import { DataGrid, GridColDef, GridValueGetterParams } from '@material-ui/data-grid';
 
+import Product from '../../Interface/Product';
+import { useProducts } from '../../context/productContext';
+import { getAllProducts } from '../../APICalls/product';
 import RevenueChart from '../../components/RevenueChart/RevenueChart';
 
-import { rows, columns } from './dummyData';
 import useStyles from './useStyles';
 
 
+const columns: GridColDef[] = [
+    {
+        field: 'image',
+        headerName: 'Photo',
+        width: 250,
+        renderCell: (params: GridValueGetterParams): JSX.Element => (
+            <Box display="flex" justifyContent="center" alignItems="center">
+            <img src={params.row.image} alt="" style={{height: '3rem',width: '3rem',borderRadius: '50%',marginRight: "20px",objectFit: 'cover'}} />
+            {params.row.title}
+            </Box>
+        )
+    },
+    {
+      field: 'stock',
+      headerName: 'Stock',
+      width: 150,
+      editable: true,
+    },
+    {
+        field: 'price',
+        headerName: 'Price',
+        width: 150,
+        editable: true,
+        renderCell: (params: GridValueGetterParams): JSX.Element => (
+            <>
+            {(params.row.price).toLocaleString()}
+            </>
+        )
+    },
+    {
+        field: 'createdAt',
+        headerName: 'Created At',
+        width: 150,
+        editable: true,
+    },
+  ];
+
 const Home = (): JSX.Element => {
     const classes = useStyles();
+    const [newProducts, setNewProducts] = React.useState<Product[] | []>()
+    const { getAllProductsContext, products } = useProducts()
+    
+    React.useEffect(()=> {
+        const fetchProducts = async()=> {
+        const response = await getAllProducts();
+        if (response){
+            if (response.success){
+            getAllProductsContext(response.success)
+            }
+        }
+        }
+        fetchProducts();
+    }, [getAllProductsContext])
+
+    React.useEffect(()=> {
+        setNewProducts(products.slice(0,10))
+    },[products])
+
     return (
     <Box my={3} mx={1}>
         <Grid container spacing={2}>
@@ -145,14 +204,17 @@ const Home = (): JSX.Element => {
                     <Paper elevation={1}>
                         <Box p={2}>
                         <Typography component="p">Products added today.</Typography>
-                        <Box mt={2} style={{ height: 320, width: '100%' }}>
-                            <DataGrid
-                                    rows={rows}
-                                    columns={columns}
-                                    pageSize={4}
-                                    checkboxSelection
-                                    disableSelectionOnClick
-                                />
+                        <Box mt={2} style={{ height: 400, width: '100%' }}>
+                            {newProducts &&
+                                <DataGrid
+                                        rows={newProducts}
+                                        columns={columns}
+                                        pageSize={5}
+                                        getRowId={(row)=> row._id}
+                                        checkboxSelection
+                                        disableSelectionOnClick
+                                    />
+                            }
                         </Box>
                         </Box>
                     </Paper>

@@ -1,27 +1,44 @@
+import React from 'react';
 import { Box, IconButton } from '@material-ui/core';
-import { DeleteOutline, CreateOutlined } from '@material-ui/icons';
+import { Visibility } from '@material-ui/icons';
 import { GridColDef, GridValueGetterParams, DataGrid, GridToolbar } from '@material-ui/data-grid';
+import { Link } from 'react-router-dom';
+
+import getAllOrders from '../../APICalls/order';
+import { useOrderContext } from '../../context/orderContext';
 
 export default function OrderList() {
+  const { orders, getAllOrdersContext } = useOrderContext()
+
   const columns: GridColDef[] = [
-    { field: 'id', headerName: 'ID', width: 120 },
+    { field: '_id', headerName: 'ID', width: 120 },
     {
       field: 'firstName',
       headerName: 'Name',
-      width: 130,
+      width: 200,
       editable: true,
+      renderCell: (params: GridValueGetterParams): JSX.Element => (
+        <Box>
+          {params.row.customer.firstname} {params.row.customer.lastname}
+        </Box>
+      )
     },
     {
-      field: 'date',
+      field: 'createdAt',
       headerName: 'Date',
       width: 150,
       editable: true,
     },
     {
-      field: 'price',
+      field: 'total',
       headerName: 'Total',
       width: 150,
       editable: true,
+      renderCell: (params: GridValueGetterParams): JSX.Element => (
+        <>
+          {(params.row.total).toLocaleString()}
+        </>
+      )
     },
     {
       field: 'status',
@@ -35,37 +52,36 @@ export default function OrderList() {
       width: 150,
       renderCell: (params: GridValueGetterParams): JSX.Element => (
         <>
-          <IconButton>
-            <CreateOutlined className="text-success" />
-          </IconButton>
-          <IconButton>
-            <DeleteOutline color="secondary" />
+          <IconButton component={Link} to={"/order/" + params.row._id}>
+            <Visibility />
           </IconButton>
         </>
       )
     }
   ];
 
-  const rows = [
-    { id: "#3120", firstName: 'Jon', date: 'May 23,2021', price: '499,900', status: 'processing', age: 35 },
-    { id: "#3121", firstName: 'Cersei', date: 'May 15,2021', price: '500,300', status: 'shipped', age: 42 },
-    { id: "#3122", firstName: 'Jaime', date: 'Apr 24,2021', price: '101,900', status: 'completed', age: 45 },
-    { id: "#3123", firstName: 'Arya', date: 'Apr 10,2021', price: '50,900', status: 'refunded', age: 16 },
-    { id: "#3124", firstName: 'Daenerys', date: 'Mar 5,2021', price: '50,900', status: 'cancelled', age: null },
-    { id: "#3125", firstName: null, date: 'May 23,2021', price: '10,500', status: 'processing', age: 150 },
-    { id: "#3126", firstName: 'Ferrara', date: 'May 15,2021', price: '70,200', status: 'shipped', age: 44 },
-    { id: "#3127", firstName: 'Rossini', date: 'Apr 24,2021', price: '870,500', status: 'completed', age: 36 },
-    { id: "#3128", firstName: 'Harvey', date: 'Apr 10,2021', price: '170,500', status: 'refunded', age: 65 },
-    { id: "#3129", firstName: 'Cookie', date: 'Mar 5,2021', price: '15,000', status: 'cancelled', age: 65 },
-  ];
 
+  React.useEffect(()=> {
+    const fetchProducts = async()=> {
+      const response = await getAllOrders();
+      if (response){
+        if (response.success){
+          console.log(response.success)
+          getAllOrdersContext(response.success)
+        }
+      }
+    }
+    fetchProducts();
+  }, [getAllOrdersContext])
 
   return (
     <Box p={2} style={{ height: 700, width: '100%' }}>
+      {orders && 
         <DataGrid
-                rows={rows}
+                rows={orders}
                 columns={columns}
                 pageSize={10}
+                getRowId={(row)=> row._id}
                 rowsPerPageOptions={[5]}
                 checkboxSelection
                 disableSelectionOnClick
@@ -73,6 +89,7 @@ export default function OrderList() {
                     Toolbar: GridToolbar,
                 }}
             />
+          }
     </Box>
   ) 
 }
